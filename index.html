@@ -3,57 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Neon Sliding Puzzle</title>
+<title>32 Tile Neon Puzzle</title>
 
 <style>
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
-    font-family:Arial, sans-serif;
+    font-family:Arial,sans-serif;
 }
 
 body{
     min-height:100vh;
     display:flex;
     flex-direction:column;
-    justify-content:center;
     align-items:center;
-    transition:background 0.6s ease;
+    justify-content:center;
+    transition:0.5s;
 }
 
-/* Original Theme */
 body.original{
     background:linear-gradient(135deg,#89f7fe,#66a6ff);
 }
 
-/* Neon Theme */
 body.neon{
     background:linear-gradient(
         135deg,
         #ff00ff,
         #00ffff,
         #39ff14,
-        #ffea00
+        #ffff00
     );
     background-size:400% 400%;
-    animation:neonMove 8s infinite alternate;
+    animation:glowBg 8s infinite alternate;
 }
 
-@keyframes neonMove{
+@keyframes glowBg{
     0%{background-position:0% 50%;}
     100%{background-position:100% 50%;}
 }
 
 h1{
     color:white;
-    text-shadow:0 0 15px rgba(255,255,255,.7);
     margin-bottom:15px;
+    text-shadow:0 0 15px rgba(255,255,255,.8);
 }
 
 .info{
     display:flex;
-    gap:20px;
+    gap:25px;
     margin-bottom:15px;
     color:white;
     font-size:1.2rem;
@@ -61,23 +59,23 @@ h1{
 }
 
 #puzzle{
-    width:340px;
-    height:340px;
+    width:540px;
+    height:450px;
     display:grid;
-    grid-template-columns:repeat(4,1fr);
+    grid-template-columns:repeat(8,1fr);
     grid-template-rows:repeat(4,1fr);
-    gap:5px;
+    gap:4px;
 }
 
 .tile{
     background:white;
-    border-radius:12px;
+    border-radius:10px;
     display:flex;
     justify-content:center;
     align-items:center;
-    font-size:2rem;
-    font-weight:bold;
     cursor:pointer;
+    font-size:1.2rem;
+    font-weight:bold;
     transition:0.2s;
     user-select:none;
 }
@@ -99,7 +97,6 @@ body.neon .tile{
     background:transparent !important;
     border:none !important;
     box-shadow:none !important;
-    cursor:default;
 }
 
 .controls{
@@ -107,7 +104,6 @@ body.neon .tile{
     display:flex;
     gap:10px;
     flex-wrap:wrap;
-    justify-content:center;
 }
 
 button{
@@ -115,8 +111,8 @@ button{
     border:none;
     border-radius:10px;
     cursor:pointer;
-    font-weight:bold;
     font-size:1rem;
+    font-weight:bold;
     transition:0.2s;
 }
 
@@ -127,16 +123,29 @@ button:hover{
 #message{
     margin-top:15px;
     color:white;
-    font-size:1.4rem;
+    font-size:1.3rem;
     font-weight:bold;
+    text-align:center;
     text-shadow:0 0 10px rgba(255,255,255,.8);
+}
+
+@media(max-width:700px){
+
+    #puzzle{
+        width:95vw;
+        height:80vw;
+    }
+
+    .tile{
+        font-size:0.9rem;
+    }
 }
 </style>
 </head>
 
 <body class="original">
 
-<h1>🧩 Neon Sliding Puzzle</h1>
+<h1>🧩 32 Tile Puzzle Challenge</h1>
 
 <div class="info">
     <div>⏱ Time: <span id="timer">00:00</span></div>
@@ -153,62 +162,80 @@ button:hover{
 <div id="message"></div>
 
 <script>
+
+const COLS = 8;
+const ROWS = 4;
+const TOTAL = 32;
+
 const puzzle = document.getElementById("puzzle");
-const timerDisplay = document.getElementById("timer");
-const moveDisplay = document.getElementById("moves");
+const timerText = document.getElementById("timer");
+const moveText = document.getElementById("moves");
 const message = document.getElementById("message");
 
-let board = [
-    1,2,3,4,
-    5,6,7,8,
-    9,10,11,12,
-    13,14,15,0
-];
+let board = [];
+
+for(let i=1;i<TOTAL;i++){
+    board.push(i);
+}
+board.push(0);
 
 let moves = 0;
 let seconds = 0;
-let timerStarted = false;
-let timerInterval;
+let timerRunning = false;
+let timer;
 
 function startTimer(){
-    if(timerStarted) return;
 
-    timerStarted = true;
+    if(timerRunning) return;
 
-    timerInterval = setInterval(()=>{
+    timerRunning = true;
+
+    timer = setInterval(()=>{
+
         seconds++;
 
         const mins = Math.floor(seconds/60);
         const secs = seconds%60;
 
-        timerDisplay.textContent =
+        timerText.textContent =
             String(mins).padStart(2,"0") + ":" +
             String(secs).padStart(2,"0");
+
     },1000);
 }
 
 function resetTimer(){
-    clearInterval(timerInterval);
-    timerStarted = false;
+
+    clearInterval(timer);
+
+    timerRunning = false;
     seconds = 0;
-    timerDisplay.textContent = "00:00";
+
+    timerText.textContent = "00:00";
 }
 
 function render(){
+
     puzzle.innerHTML = "";
 
-    board.forEach((num,index)=>{
+    board.forEach((value,index)=>{
+
         const tile = document.createElement("div");
 
-        if(num === 0){
+        if(value === 0){
+
             tile.className = "tile empty";
+
         }else{
+
             tile.className = "tile";
-            tile.textContent = num;
+            tile.textContent = value;
+
             tile.addEventListener("click",()=>moveTile(index));
         }
 
         puzzle.appendChild(tile);
+
     });
 
     checkWin();
@@ -220,22 +247,23 @@ function moveTile(index){
 
     const emptyIndex = board.indexOf(0);
 
-    const row = Math.floor(index/4);
-    const col = index%4;
+    const row = Math.floor(index / COLS);
+    const col = index % COLS;
 
-    const emptyRow = Math.floor(emptyIndex/4);
-    const emptyCol = emptyIndex%4;
+    const emptyRow = Math.floor(emptyIndex / COLS);
+    const emptyCol = emptyIndex % COLS;
 
     const adjacent =
         (Math.abs(row-emptyRow)===1 && col===emptyCol) ||
         (Math.abs(col-emptyCol)===1 && row===emptyRow);
 
     if(adjacent){
+
         [board[index],board[emptyIndex]] =
         [board[emptyIndex],board[index]];
 
         moves++;
-        moveDisplay.textContent = moves;
+        moveText.textContent = moves;
 
         render();
     }
@@ -243,29 +271,29 @@ function moveTile(index){
 
 function shuffleBoard(){
 
-    for(let i=0;i<500;i++){
+    for(let i=0;i<2000;i++){
 
         const emptyIndex = board.indexOf(0);
 
         const neighbors = [];
 
-        const row = Math.floor(emptyIndex/4);
-        const col = emptyIndex%4;
+        const row = Math.floor(emptyIndex / COLS);
+        const col = emptyIndex % COLS;
 
-        if(row>0) neighbors.push(emptyIndex-4);
-        if(row<3) neighbors.push(emptyIndex+4);
-        if(col>0) neighbors.push(emptyIndex-1);
-        if(col<3) neighbors.push(emptyIndex+1);
+        if(row>0) neighbors.push(emptyIndex - COLS);
+        if(row<ROWS-1) neighbors.push(emptyIndex + COLS);
+        if(col>0) neighbors.push(emptyIndex - 1);
+        if(col<COLS-1) neighbors.push(emptyIndex + 1);
 
-        const randomNeighbor =
+        const random =
             neighbors[Math.floor(Math.random()*neighbors.length)];
 
-        [board[emptyIndex], board[randomNeighbor]] =
-        [board[randomNeighbor], board[emptyIndex]];
+        [board[emptyIndex],board[random]] =
+        [board[random],board[emptyIndex]];
     }
 
     moves = 0;
-    moveDisplay.textContent = "0";
+    moveText.textContent = "0";
 
     resetTimer();
 
@@ -277,9 +305,12 @@ function shuffleBoard(){
 function toggleTheme(){
 
     if(document.body.classList.contains("original")){
+
         document.body.classList.remove("original");
         document.body.classList.add("neon");
+
     }else{
+
         document.body.classList.remove("neon");
         document.body.classList.add("original");
     }
@@ -287,24 +318,26 @@ function toggleTheme(){
 
 function checkWin(){
 
-    for(let i=0;i<15;i++){
+    for(let i=0;i<TOTAL-1;i++){
+
         if(board[i] !== i+1){
             return;
         }
     }
 
-    if(board[15] === 0){
+    if(board[TOTAL-1] === 0){
 
-        clearInterval(timerInterval);
+        clearInterval(timer);
 
         message.innerHTML =
-            "🎉 Puzzle Solved!<br>" +
-            "⏱ Time: " + timerDisplay.textContent +
+            "🏆 You Solved the 32 Tile Puzzle!<br>" +
+            "⏱ Time: " + timerText.textContent +
             " | 🎯 Moves: " + moves;
     }
 }
 
 render();
+
 </script>
 
 </body>
